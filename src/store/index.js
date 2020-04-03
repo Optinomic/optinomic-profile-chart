@@ -22,6 +22,7 @@ export default new Vuex.Store({
           "show_score_profile_line": true,
           "show_score_circles": true,
           "show_settings_block": false,
+          "show_range_text": true,
           "allow_toggle_settings_block": true,
           "topnumber_hide_first_last": false,
           "range_alpha": 0.09,
@@ -152,8 +153,10 @@ export default new Vuex.Store({
     },
     "bdi_chart": {
       "options": {
-          "min": -1.5,
-          "max": 64.5,
+          //"min": -1.5,
+          //"max": 64.5,
+          "min": 0,
+          "max": 63,
           "item_height": 50,
           "item_text_left": 130,
           "item_text_right": 130,

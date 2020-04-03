@@ -1,6 +1,5 @@
 <template>
-    <div id="app">
-        <img alt="Vue logo" src="./assets/logo.png" />
+    <div id="app" style="margin:30px;">
         <OptinomicProfileChart :options="chart_options" :ranges="chart_ranges" :scales="chart_scales" :scores="chart_current_data"></OptinomicProfileChart>
     </div>
 </template>
@@ -12,8 +11,8 @@ export default {
     name: "App",
     computed: {
         chart_current() {
-            // return 'bscl_chart'
-            return 'bdi_chart'
+            return 'bscl_chart'
+            // return 'bdi_chart'
         },
         chart_current_data() {
             var return_obj = null;

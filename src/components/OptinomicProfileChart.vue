@@ -1,5 +1,5 @@
 <template>
-    <div class="chart_container" ref="chartdiv">
+    <div v-bind:style="{ width: '100%', height: getChartHeight + 'px' }" ref="chartdiv">
     </div>
 </template>
 
@@ -30,14 +30,114 @@ export default {
             default: null
         }
     },
+    data: function() {
+        return {
+            captures: []
+        }
+    },
     methods: {},
+    computed: {
+        getChartHeight() {
+            var height = (this.scales.length + 2) * this.options.item_height;
+            // height = height + this.options.item_height;
+            return height;
+        }
+    },
     mounted() {
 
         // ---------------------------------
         // Functions
         // ---------------------------------
+
+        var buildData = function(scores_orig, scales, options) {
+            try {
+                var scores = JSON.parse(JSON.stringify(scores_orig));
+                var data_object = {
+                    data: [],
+                    captures: []
+                };
+
+                var getCategoryText = function(title, text) {
+                    var r = "";
+                    if (title !== "") {
+                        r = r + title;
+                    };
+                    if ((title !== "") && (text !== "")) {
+                        r = r + ": ";
+                    }
+                    if (text !== "") {
+                        r = r + text;
+                    };
+                    return "[font-size:11px]" + r + "[/]";
+                };
+
+                var flatten = function(obj, name, stem) {
+                    var out = {};
+                    var newStem = (typeof stem !== 'undefined' && stem !== '') ? stem + '.' + name : name;
+
+                    if (typeof obj !== 'object') {
+                        out[newStem] = obj;
+                        return out;
+                    }
+
+                    for (var p in obj) {
+                        var prop = flatten(obj[p], p, newStem);
+                        out = merge([out, prop]);
+                    }
+
+                    return out;
+                };
+
+                var merge = function(objects) {
+                    var out = {};
+
+                    for (var i = 0; i < objects.length; i++) {
+                        for (var p in objects[i]) {
+                            out[p] = objects[i][p];
+                        }
+                    }
+
+                    return out;
+                }
+
+                scales.forEach(function(s, sid) {
+                    var scale = Object.assign({}, s);
+                    // Category
+                    scale.category_left = getCategoryText(s.left_title, s.left_text);
+                    scale.category_right = getCategoryText(s.right_title, s.right_text);
+
+                    // Messungen hinzufügen
+                    scores.data.forEach(function(_sr) {
+                        var sr = flatten(_sr);
+                        var capture_name = "capture_event_" + sr.event_id;
+                        if (sid === 0) {
+                            var obj = {
+                                category: capture_name,
+                                name: sr[options.response_title_path],
+                                date: sr[options.response_date_path]
+                            };
+                            data_object.captures.push(obj);
+                        };
+                        scale[capture_name] = sr[scale.score_path];
+                    }.bind(this));
+
+                    // FAKE
+                    scale.cs_start = 1 + sid;
+                    scale.cs_end = 4 + sid;
+
+                    // publish
+                    data_object.data.push(scale);
+                }.bind(this));
+
+                // console.warn('buildData :: ', data_object);
+                return data_object;
+            } catch (e) {
+                console.error('Error: buildData', e);
+            }
+        };
+
         var drawRanges = function(ranges, options) {
-            console.warn('drawRanges :: ', ranges, options);
+            // console.warn('drawRanges :: ', ranges, options);
 
             ranges.forEach(function(r) {
                 var range = valueAxis.axisRanges.create();
@@ -60,122 +160,119 @@ export default {
                 range_line_right.axisFill.fill = am4core.color(r.color);
                 range_line_right.axisFill.fillOpacity = 0.3;
 
+                if (options.show_range_text === true) {
+                    range.label.text = "[font-size:12px]" + r.text + "[/]";
+                    range.label.fill = am4core.color("black");
+                    range.label.fillOpacity = 0.5;
 
-                range.label.text = "[font-size:12px]" + r.text + "[/]";
-                range.label.fill = am4core.color("black");
-                range.label.fillOpacity = 0.5;
-
-                range.label.inside = true;
-                range.label.location = 1;
-                range.label.rotation = 90;
-                range.label.margin = 5;
-                range.label.adapter.add("horizontalCenter", function() {
-                    return "left";
-                });
-                range.label.adapter.add("verticalCenter", function() {
-                    return "top";
-                });
+                    range.label.inside = true;
+                    range.label.location = 0;
+                    range.label.rotation = 90;
+                    range.label.marginTop = 5;
+                    range.label.adapter.add("horizontalCenter", function() {
+                        return "left";
+                    });
+                    range.label.adapter.add("verticalCenter", function() {
+                        return "top";
+                    });
+                };
 
             }.bind(this));
 
 
         };
 
-        var buildData = function(scores, scales) {
-            var data = [];
-            console.warn('buildData :: ', scores, scales);
+        var drawAxis = function(options) {
+            // console.warn('drawAxis :: ', options);
 
-            scales.forEach(function(s,sid) {
-                var scale = Object.assign({}, s);
-                scale.cs_start = 5 + sid;
-                scale.cs_end = 16 + sid;
-                data.push(scale);
-            }.bind(this));
-            return data;
+            //create LEFT category axis
+            var categoryAxis_left = chart.yAxes.push(new am4charts.CategoryAxis());
+            var label_left = categoryAxis_left.renderer.labels.template;
+            label_left.wrap = true;
+            label_left.align = "left";
+            //label_left.truncate = true;
+            label_left.maxWidth = options.item_text_left;
+            categoryAxis_left.dataFields.category = "category_left";
+            categoryAxis_left.renderer.grid.template.location = 0;
+            categoryAxis_left.renderer.opposite = false;
+            categoryAxis_left.renderer.inversed = true;
+
+            //create LEFT category axis
+            var categoryAxis_right = chart.yAxes.push(new am4charts.CategoryAxis());
+            var label_right = categoryAxis_right.renderer.labels.template;
+            label_right.wrap = true;
+            label_right.align = "left";
+            //label_right.truncate = true;
+            label_right.maxWidth = options.item_text_right;
+            categoryAxis_right.dataFields.category = "category_right";
+            categoryAxis_right.renderer.grid.template.location = 0;
+            categoryAxis_right.renderer.opposite = true;
+            categoryAxis_right.renderer.inversed = true;
         };
 
+        var drawProfiles = function(data_object) {
+            // console.warn('drawProfiles :: ', data_object);
+            var stroke_width = 6;
+
+            data_object.captures.forEach(function(val) {
+                //create line
+                var lineSeries = chart.series.push(new am4charts.LineSeries());
+                lineSeries.dataFields.categoryY = "category_left";
+                lineSeries.dataFields.valueX = val.category;
+                lineSeries.name = new Date(val.date);
+                lineSeries.strokeWidth = stroke_width;
+                lineSeries.tooltipText = val.name + ": {valueX.value}";
+
+                //add bullets
+                var circleBullet = lineSeries.bullets.push(new am4charts.CircleBullet());
+                circleBullet.circle.fill = am4core.color("#fff");
+                circleBullet.circle.strokeWidth = stroke_width;
+            }.bind(this));
+
+        }
+
+        // Create Chart & add Data
         let chart = am4core.create(this.$refs.chartdiv, am4charts.XYChart);
+        chart.dateFormatter.dateFormat = "dd.MM.yyyy";
+        chart.exporting.menu = new am4core.ExportMenu();
+        chart.exporting.title = "Optinomic - Chart";
+        chart.exporting.filePrefix = "optinomic_chart";
 
-        chart.data = [{
-            "year": "Resilienz",
-            "income": 3.5,
-            "expenses": 8.1,
-            "cs_start": 5,
-            "cs_end": 30
-        }, {
-            "year": "2006",
-            "income": 6.2,
-            "expenses": 2.8,
-            "cs_start": 8,
-            "cs_end": 21
-        }, {
-            "year": "2007",
-            "income": 0.1,
-            "expenses": 3.9,
-            "cs_start": 12,
-            "cs_end": 15
-        }, {
-            "year": "2008",
-            "income": 9.5,
-            "expenses": 5.1,
-            "cs_start": 11,
-            "cs_end": 23
-        }, {
-            "year": "2009",
-            "income": 4.6,
-            "expenses": 5,
-            "cs_start": 9,
-            "cs_end": 28
-        }];
-
-
-        //create category axis for years
-        var categoryAxis_left = chart.yAxes.push(new am4charts.CategoryAxis());
-        categoryAxis_left.dataFields.category = "year";
-        //categoryAxis_left.renderer.inversed = true;
-        categoryAxis_left.renderer.grid.template.location = 0;
-        categoryAxis_left.renderer.opposite = false;
-
-        var categoryAxis_right = chart.yAxes.push(new am4charts.CategoryAxis());
-        categoryAxis_right.dataFields.category = "year";
-        //categoryAxis_right.renderer.inversed = true;
-        categoryAxis_right.renderer.grid.template.location = 0;
-        categoryAxis_right.renderer.opposite = true;
-
-        //create value axis for income and expenses
+        // Create value axis for captures
         var valueAxis = chart.xAxes.push(new am4charts.ValueAxis());
         valueAxis.renderer.opposite = true;
         valueAxis.min = this.options.min;
         valueAxis.max = this.options.max;
 
-        //create columns
+        // Add Data to Chart
+        var chart_data = buildData(this.scores, this.scales, this.options);
+        chart.data = chart_data.data;
+
+        // Zeichne Achsen
+        drawAxis(this.options);
+
+
+
+
+        // Klinikstichprobe
         var series = chart.series.push(new am4charts.ColumnSeries());
-        series.dataFields.categoryY = "year";
+        series.dataFields.categoryY = "category_left";
         series.dataFields.valueX = "cs_end";
         series.dataFields.openValueX = "cs_start";
-        series.name = "Clinic Sample";
+        series.name = "Klinikstichprobe";
+        series.columns.template.fill = "black";
+        series.columns.template.stroke = "black";
         series.columns.template.fillOpacity = 0.2;
-        series.columns.template.strokeOpacity = 0.5;
+        series.columns.template.strokeOpacity = 0.2;
         series.tooltipText = "{openValueX.value} - {valueX.value}";
 
-        //create line
-        var lineSeries = chart.series.push(new am4charts.LineSeries());
-        lineSeries.dataFields.categoryY = "year";
-        lineSeries.dataFields.valueX = "expenses";
-        lineSeries.name = "Messung 1";
-        lineSeries.strokeWidth = 8;
-        lineSeries.tooltipText = "{categoryY}: {valueX.value}";
-
-        //add bullets
-        var circleBullet = lineSeries.bullets.push(new am4charts.CircleBullet());
-        circleBullet.circle.fill = am4core.color("#fff");
-        circleBullet.circle.strokeWidth = 16;
+        // Profiles
+        drawProfiles(chart_data);
 
         // Ranges
         drawRanges(this.ranges, this.options);
 
-        var data = buildData(this.scores, this.scales);
-        console.log('===> DATA :: ', data);
+
 
         //add chart cursor
         chart.cursor = new am4charts.XYCursor();
@@ -195,8 +292,5 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.chart_container {
-    width: 100%;
-    height: 400px;
-}
+
 </style>
