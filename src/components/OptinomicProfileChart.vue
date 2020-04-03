@@ -137,99 +137,110 @@ export default {
         };
 
         var drawRanges = function(ranges, options) {
-            // console.warn('drawRanges :: ', ranges, options);
+            try {
+                // console.warn('drawRanges :: ', ranges, options);
 
-            ranges.forEach(function(r) {
-                var range = valueAxis.axisRanges.create();
-                range.value = r.range_start;
-                range.endValue = r.range_stop;
-                range.axisFill.fill = am4core.color(r.color);
-                range.axisFill.fillOpacity = options.range_alpha;
-                //range.grid.stroke = am4core.color(r.color);
-                //range.grid.strokeOpacity = 0.8;
+                ranges.forEach(function(r) {
+                    var range = valueAxis.axisRanges.create();
+                    range.value = r.range_start;
+                    range.endValue = r.range_stop;
+                    range.axisFill.fill = am4core.color(r.color);
+                    range.axisFill.fillOpacity = options.range_alpha;
+                    //range.grid.stroke = am4core.color(r.color);
+                    //range.grid.strokeOpacity = 0.8;
 
-                var range_line_left = valueAxis.axisRanges.create();
-                range_line_left.value = r.range_start;
-                range_line_left.endValue = r.range_start + 0.1;
-                range_line_left.axisFill.fill = am4core.color(r.color);
-                range_line_left.axisFill.fillOpacity = 0.3;
+                    var range_line_left = valueAxis.axisRanges.create();
+                    range_line_left.value = r.range_start;
+                    range_line_left.endValue = r.range_start + 0.1;
+                    range_line_left.axisFill.fill = am4core.color(r.color);
+                    range_line_left.axisFill.fillOpacity = 0.3;
 
-                var range_line_right = valueAxis.axisRanges.create();
-                range_line_right.value = r.range_stop - 0.1;
-                range_line_right.endValue = r.range_stop;
-                range_line_right.axisFill.fill = am4core.color(r.color);
-                range_line_right.axisFill.fillOpacity = 0.3;
+                    var range_line_right = valueAxis.axisRanges.create();
+                    range_line_right.value = r.range_stop - 0.1;
+                    range_line_right.endValue = r.range_stop;
+                    range_line_right.axisFill.fill = am4core.color(r.color);
+                    range_line_right.axisFill.fillOpacity = 0.3;
 
-                if (options.show_range_text === true) {
-                    range.label.text = "[font-size:12px]" + r.text + "[/]";
-                    range.label.fill = am4core.color("black");
-                    range.label.fillOpacity = 0.5;
+                    if (options.show_range_text === true) {
+                        range.label.text = "[font-size:12px]" + r.text + "[/]";
+                        range.label.fill = am4core.color("black");
+                        range.label.fillOpacity = 0.5;
 
-                    range.label.inside = true;
-                    range.label.location = 0;
-                    range.label.rotation = 90;
-                    range.label.marginTop = 5;
-                    range.label.adapter.add("horizontalCenter", function() {
-                        return "left";
-                    });
-                    range.label.adapter.add("verticalCenter", function() {
-                        return "top";
-                    });
-                };
+                        range.label.inside = true;
+                        range.label.location = 0;
+                        range.label.rotation = 90;
+                        range.label.marginTop = 5;
+                        range.label.adapter.add("horizontalCenter", function() {
+                            return "left";
+                        });
+                        range.label.adapter.add("verticalCenter", function() {
+                            return "top";
+                        });
+                    };
 
-            }.bind(this));
+                }.bind(this));
 
-
+            } catch (e) {
+                console.error('Error: drawRanges', e);
+            }
         };
 
         var drawAxis = function(options) {
-            // console.warn('drawAxis :: ', options);
+            try {
+                // console.warn('drawAxis :: ', options);
 
-            //create LEFT category axis
-            var categoryAxis_left = chart.yAxes.push(new am4charts.CategoryAxis());
-            var label_left = categoryAxis_left.renderer.labels.template;
-            label_left.wrap = true;
-            label_left.align = "left";
-            //label_left.truncate = true;
-            label_left.maxWidth = options.item_text_left;
-            categoryAxis_left.dataFields.category = "category_left";
-            categoryAxis_left.renderer.grid.template.location = 0;
-            categoryAxis_left.renderer.opposite = false;
-            categoryAxis_left.renderer.inversed = true;
+                //create LEFT category axis
+                var categoryAxis_left = chart.yAxes.push(new am4charts.CategoryAxis());
+                var label_left = categoryAxis_left.renderer.labels.template;
+                label_left.wrap = true;
+                label_left.align = "left";
+                //label_left.truncate = true;
+                label_left.maxWidth = options.item_text_left;
+                categoryAxis_left.dataFields.category = "category_left";
+                categoryAxis_left.renderer.grid.template.location = 0;
+                categoryAxis_left.renderer.opposite = false;
+                categoryAxis_left.renderer.inversed = true;
 
-            //create LEFT category axis
-            var categoryAxis_right = chart.yAxes.push(new am4charts.CategoryAxis());
-            var label_right = categoryAxis_right.renderer.labels.template;
-            label_right.wrap = true;
-            label_right.align = "left";
-            //label_right.truncate = true;
-            label_right.maxWidth = options.item_text_right;
-            categoryAxis_right.dataFields.category = "category_right";
-            categoryAxis_right.renderer.grid.template.location = 0;
-            categoryAxis_right.renderer.opposite = true;
-            categoryAxis_right.renderer.inversed = true;
+                //create LEFT category axis
+                var categoryAxis_right = chart.yAxes.push(new am4charts.CategoryAxis());
+                var label_right = categoryAxis_right.renderer.labels.template;
+                label_right.wrap = true;
+                label_right.align = "left";
+                //label_right.truncate = true;
+                label_right.maxWidth = options.item_text_right;
+                categoryAxis_right.dataFields.category = "category_right";
+                categoryAxis_right.renderer.grid.template.location = 0;
+                categoryAxis_right.renderer.opposite = true;
+                categoryAxis_right.renderer.inversed = true;
+            } catch (e) {
+                console.error('Error: drawAxis', e);
+            }
         };
 
         var drawProfiles = function(data_object) {
-            // console.warn('drawProfiles :: ', data_object);
-            var stroke_width = 6;
+            try {
+                // console.warn('drawProfiles :: ', data_object);
+                var stroke_width = 6;
 
-            data_object.captures.forEach(function(val) {
-                //create line
-                var lineSeries = chart.series.push(new am4charts.LineSeries());
-                lineSeries.dataFields.categoryY = "category_left";
-                lineSeries.dataFields.valueX = val.category;
-                lineSeries.name = new Date(val.date);
-                lineSeries.strokeWidth = stroke_width;
-                lineSeries.tooltipText = val.name + ": {valueX.value}";
+                data_object.captures.forEach(function(val) {
+                    //create line
+                    var lineSeries = chart.series.push(new am4charts.LineSeries());
+                    lineSeries.dataFields.categoryY = "category_left";
+                    lineSeries.dataFields.valueX = val.category;
+                    lineSeries.name = new Date(val.date);
+                    lineSeries.strokeWidth = stroke_width;
+                    lineSeries.tooltipText = val.name + ": {valueX.value}";
 
-                //add bullets
-                var circleBullet = lineSeries.bullets.push(new am4charts.CircleBullet());
-                circleBullet.circle.fill = am4core.color("#fff");
-                circleBullet.circle.strokeWidth = stroke_width;
-            }.bind(this));
-
+                    //add bullets
+                    var circleBullet = lineSeries.bullets.push(new am4charts.CircleBullet());
+                    circleBullet.circle.fill = am4core.color("#fff");
+                    circleBullet.circle.strokeWidth = stroke_width;
+                }.bind(this));
+            } catch (e) {
+                console.error('Error: drawProfiles', e);
+            }
         }
+
 
         // Create Chart & add Data
         let chart = am4core.create(this.$refs.chartdiv, am4charts.XYChart);
@@ -252,8 +263,6 @@ export default {
         drawAxis(this.options);
 
 
-
-
         // Klinikstichprobe
         var series = chart.series.push(new am4charts.ColumnSeries());
         series.dataFields.categoryY = "category_left";
@@ -273,13 +282,14 @@ export default {
         drawRanges(this.ranges, this.options);
 
 
-
-        //add chart cursor
+        // add chart cursor
         chart.cursor = new am4charts.XYCursor();
-        // chart.cursor.behavior = "zoomY";
+        chart.cursor.behavior = "zoomX";
 
-        //add legend
+        // add legend
         chart.legend = new am4charts.Legend();
+
+        // Set
         this.chart = chart;
     },
     beforeDestroy() {
