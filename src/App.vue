@@ -1,11 +1,13 @@
 <template>
     <div id="app" style="margin:30px;">
-        <OptinomicProfileChart :options="chart_options" :ranges="chart_ranges" :scales="chart_scales" :scores="chart_current_data"></OptinomicProfileChart>
+        <OptinomicProfileChart :options="chart_options" :ranges="chart_ranges" :scales="chart_scales" :scores="chart_current_data" :clinic_samples="chart_cs"></OptinomicProfileChart>
     </div>
 </template>
 
 <script>
 import OptinomicProfileChart from "./components/OptinomicProfileChart.vue";
+
+import cs_bscl from './assets/clinic_samples/optimized/cs_bscl.json'
 
 export default {
     name: "App",
@@ -22,6 +24,17 @@ export default {
 
             if (this.chart_current === 'bdi_chart') {
                 return_obj = this.$store.state.data_apps.data_object['ch.suedhang.apps.bdi.production'];
+            };
+            return return_obj;
+        },
+        chart_cs() {
+            var return_obj = null;
+            if (this.chart_current === 'bscl_chart') {
+                return_obj = cs_bscl;
+            };
+
+            if (this.chart_current === 'bdi_chart') {
+                return_obj = null;
             };
             return return_obj;
         },

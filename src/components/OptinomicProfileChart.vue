@@ -28,11 +28,21 @@ export default {
         ranges: {
             type: Array,
             default: null
+        },
+        clinic_samples: {
+            type: Object,
+            default: null
+        },
+        clinic_sample_dive: {
+            type: Object,
+            default: null
         }
     },
     data: function() {
         return {
-            captures: []
+            chart_data: {
+                type: Object,
+            }
         }
     },
     methods: {},
@@ -45,11 +55,13 @@ export default {
     },
     mounted() {
 
+        console.error('clinic_samples', this.clinic_samples);
+
         // ---------------------------------
         // Functions
         // ---------------------------------
 
-        var buildData = function(scores_orig, scales, options) {
+        var buildData = function(scores_orig, scales, options, cs, cs_dive) {
             try {
                 var scores = JSON.parse(JSON.stringify(scores_orig));
                 var data_object = {
@@ -100,6 +112,21 @@ export default {
                     return out;
                 }
 
+                var getDataDive = function(data, dive) {
+                    var return_ob = {}
+                    dive.forEach(function(_d) {
+                        if (Array.isArray(data[_d])) {
+                            getDataDive(data[_d], dive.shift());
+                        } else {
+                            if ("statistics" in data[_d]) {
+                                return_ob = data[_d].statistics;
+                            };
+                        };
+
+                    }.bind(this));
+                    return return_ob;
+                }
+
                 scales.forEach(function(s, sid) {
                     var scale = Object.assign({}, s);
                     // Category
@@ -114,16 +141,39 @@ export default {
                             var obj = {
                                 category: capture_name,
                                 name: sr[options.response_title_path],
-                                date: sr[options.response_date_path]
+                                date: sr[options.response_date_path],
                             };
                             data_object.captures.push(obj);
                         };
                         scale[capture_name] = sr[scale.score_path];
                     }.bind(this));
 
-                    // FAKE
-                    scale.cs_start = 1 + sid;
-                    scale.cs_end = 4 + sid;
+                    // Clinic Samples hinzufügen;
+                    if (cs !== null) {
+
+                        // If no Dive is given - always last.
+                        if (cs_dive === null) {
+                            cs_dive = [];
+                            if ('dimensions' in cs) {
+                                cs.dimensions.forEach(function(dim) {
+                                    cs_dive.push(dim.array.length - 1);
+                                }.bind(this));
+                            };
+                        };
+
+                        // get current statisics object
+                        scale.cs_full_data = getDataDive(cs.data, cs_dive);
+                        scale.cs_data = scale.cs_full_data[scale.clinic_sample_var];
+
+                        scale.cs_start = scale.cs_data.mean_1sd_min;
+                        scale.cs_end = scale.cs_data.mean_1sd_plus;
+
+                                console.error('HERE', scale);
+
+
+                    };
+
+
 
                     // publish
                     data_object.data.push(scale);
@@ -142,8 +192,17 @@ export default {
 
                 ranges.forEach(function(r) {
                     var range = valueAxis.axisRanges.create();
-                    range.value = r.range_start;
-                    range.endValue = r.range_stop;
+                    var range_start = r.range_start;
+                    if (range_start === -999) {
+                        range_start = options.min;
+                    }
+                    var range_stop = r.range_stop;
+                    if (range_stop === 999) {
+                        range_stop = options.max;
+                    }
+
+                    range.value = range_start;
+                    range.endValue = range_stop;
                     range.axisFill.fill = am4core.color(r.color);
                     range.axisFill.fillOpacity = options.range_alpha;
                     //range.grid.stroke = am4core.color(r.color);
@@ -151,15 +210,17 @@ export default {
 
                     var range_line_left = valueAxis.axisRanges.create();
                     range_line_left.value = r.range_start;
-                    range_line_left.endValue = r.range_start + 0.1;
+                    range_line_left.endValue = r.range_start + 0.01;
                     range_line_left.axisFill.fill = am4core.color(r.color);
-                    range_line_left.axisFill.fillOpacity = 0.3;
+                    range_line_left.axisFill.fillOpacity = 0.8;
+                    range_line_left.axisFill.strokeOpacity = 0;
+
 
                     var range_line_right = valueAxis.axisRanges.create();
-                    range_line_right.value = r.range_stop - 0.1;
+                    range_line_right.value = r.range_stop - 0.01;
                     range_line_right.endValue = r.range_stop;
                     range_line_right.axisFill.fill = am4core.color(r.color);
-                    range_line_right.axisFill.fillOpacity = 0.3;
+                    range_line_right.axisFill.fillOpacity = 0.8;
 
                     if (options.show_range_text === true) {
                         range.label.text = "[font-size:12px]" + r.text + "[/]";
@@ -174,7 +235,7 @@ export default {
                             return "left";
                         });
                         range.label.adapter.add("verticalCenter", function() {
-                            return "top";
+                            return "bottom";
                         });
                     };
 
@@ -241,6 +302,20 @@ export default {
             }
         }
 
+        var drawCS = function(cs) {
+            console.warn('drawCS :: ', cs);
+
+            var series = chart.series.push(new am4charts.ColumnSeries());
+            series.dataFields.categoryY = "category_left";
+            series.dataFields.valueX = "cs_end";
+            series.dataFields.openValueX = "cs_start";
+            series.name = "Klinikstichprobe";
+            series.columns.template.fill = "black";
+            series.columns.template.stroke = "black";
+            series.columns.template.fillOpacity = 0.2;
+            series.columns.template.strokeOpacity = 0.2;
+            series.tooltipText = "{openValueX.value} - {valueX.value}";
+        }
 
         // Create Chart & add Data
         let chart = am4core.create(this.$refs.chartdiv, am4charts.XYChart);
@@ -252,28 +327,22 @@ export default {
         // Create value axis for captures
         var valueAxis = chart.xAxes.push(new am4charts.ValueAxis());
         valueAxis.renderer.opposite = true;
-        valueAxis.min = this.options.min;
-        valueAxis.max = this.options.max;
+        //valueAxis.min = this.options.min;
+        //valueAxis.max = this.options.max;
+        valueAxis.minX = this.options.min;
+        valueAxis.maxX = this.options.max;
 
         // Add Data to Chart
-        var chart_data = buildData(this.scores, this.scales, this.options);
+        var chart_data = buildData(this.scores, this.scales, this.options, this.clinic_samples, this.clinic_sample_dive);
         chart.data = chart_data.data;
+        this.chart_data = chart_data;
 
         // Zeichne Achsen
         drawAxis(this.options);
 
 
         // Klinikstichprobe
-        var series = chart.series.push(new am4charts.ColumnSeries());
-        series.dataFields.categoryY = "category_left";
-        series.dataFields.valueX = "cs_end";
-        series.dataFields.openValueX = "cs_start";
-        series.name = "Klinikstichprobe";
-        series.columns.template.fill = "black";
-        series.columns.template.stroke = "black";
-        series.columns.template.fillOpacity = 0.2;
-        series.columns.template.strokeOpacity = 0.2;
-        series.tooltipText = "{openValueX.value} - {valueX.value}";
+        drawCS(this.clinic_samples);
 
         // Profiles
         drawProfiles(chart_data);
