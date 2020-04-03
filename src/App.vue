@@ -1,7 +1,7 @@
 <template>
     <div id="app">
         <img alt="Vue logo" src="./assets/logo.png" />
-        <OptinomicProfileChart :options="chart_options" :ranges="chart_ranges"></OptinomicProfileChart>
+        <OptinomicProfileChart :options="chart_options" :ranges="chart_ranges" :scales="chart_scales" :scores="chart_current_data"></OptinomicProfileChart>
     </div>
 </template>
 
@@ -14,6 +14,17 @@ export default {
         chart_current() {
             // return 'bscl_chart'
             return 'bdi_chart'
+        },
+        chart_current_data() {
+            var return_obj = null;
+            if (this.chart_current === 'bscl_chart') {
+                return_obj = this.$store.state.data_apps.data_object['ch.suedhang.apps.bscl_anq.production'];
+            };
+
+            if (this.chart_current === 'bdi_chart') {
+                return_obj = this.$store.state.data_apps.data_object['ch.suedhang.apps.bdi.production'];
+            };
+            return return_obj;
         },
         chart_options() {
             try {
@@ -29,6 +40,13 @@ export default {
                 return null;
             };
         },
+        chart_scales() {
+            try {
+                return this.$store.state[this.chart_current].scales;
+            } catch (e) {
+                return null;
+            };
+        }
     },
     components: {
         OptinomicProfileChart

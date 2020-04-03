@@ -17,6 +17,14 @@ export default {
             type: Object,
             default: null
         },
+        scales: {
+            type: Array,
+            default: null
+        },
+        scores: {
+            type: Object,
+            default: null
+        },
         ranges: {
             type: Array,
             default: null
@@ -29,7 +37,7 @@ export default {
         // Functions
         // ---------------------------------
         var drawRanges = function(ranges, options) {
-            console.warn('drawRanges :: ', ranges);
+            console.warn('drawRanges :: ', ranges, options);
 
             ranges.forEach(function(r) {
                 var range = valueAxis.axisRanges.create();
@@ -37,8 +45,8 @@ export default {
                 range.endValue = r.range_stop;
                 range.axisFill.fill = am4core.color(r.color);
                 range.axisFill.fillOpacity = options.range_alpha;
-                // range.grid.stroke = am4core.color(r.color);
-                // range.grid.strokeOpacity = 0.8;
+                //range.grid.stroke = am4core.color(r.color);
+                //range.grid.strokeOpacity = 0.8;
 
                 var range_line_left = valueAxis.axisRanges.create();
                 range_line_left.value = r.range_start;
@@ -46,14 +54,14 @@ export default {
                 range_line_left.axisFill.fill = am4core.color(r.color);
                 range_line_left.axisFill.fillOpacity = 0.3;
 
-                // var range_line_right = valueAxis.axisRanges.create();
-                // range_line_right.value = r.range_stop - 0.1;
-                // range_line_right.endValue = r.range_stop;
-                // range_line_right.axisFill.fill = am4core.color(r.color);
-                // range_line_right.axisFill.fillOpacity = 0.3;
+                var range_line_right = valueAxis.axisRanges.create();
+                range_line_right.value = r.range_stop - 0.1;
+                range_line_right.endValue = r.range_stop;
+                range_line_right.axisFill.fill = am4core.color(r.color);
+                range_line_right.axisFill.fillOpacity = 0.3;
 
 
-                range.label.text = r.text;
+                range.label.text = "[font-size:12px]" + r.text + "[/]";
                 range.label.fill = am4core.color("black");
                 range.label.fillOpacity = 0.5;
 
@@ -73,6 +81,18 @@ export default {
 
         };
 
+        var buildData = function(scores, scales) {
+            var data = [];
+            console.warn('buildData :: ', scores, scales);
+
+            scales.forEach(function(s,sid) {
+                var scale = Object.assign({}, s);
+                scale.cs_start = 5 + sid;
+                scale.cs_end = 16 + sid;
+                data.push(scale);
+            }.bind(this));
+            return data;
+        };
 
         let chart = am4core.create(this.$refs.chartdiv, am4charts.XYChart);
 
@@ -110,10 +130,17 @@ export default {
 
 
         //create category axis for years
-        var categoryAxis = chart.yAxes.push(new am4charts.CategoryAxis());
-        categoryAxis.dataFields.category = "year";
-        categoryAxis.renderer.inversed = true;
-        categoryAxis.renderer.grid.template.location = 0;
+        var categoryAxis_left = chart.yAxes.push(new am4charts.CategoryAxis());
+        categoryAxis_left.dataFields.category = "year";
+        //categoryAxis_left.renderer.inversed = true;
+        categoryAxis_left.renderer.grid.template.location = 0;
+        categoryAxis_left.renderer.opposite = false;
+
+        var categoryAxis_right = chart.yAxes.push(new am4charts.CategoryAxis());
+        categoryAxis_right.dataFields.category = "year";
+        //categoryAxis_right.renderer.inversed = true;
+        categoryAxis_right.renderer.grid.template.location = 0;
+        categoryAxis_right.renderer.opposite = true;
 
         //create value axis for income and expenses
         var valueAxis = chart.xAxes.push(new am4charts.ValueAxis());
@@ -145,7 +172,10 @@ export default {
         circleBullet.circle.strokeWidth = 16;
 
         // Ranges
-        drawRanges(this.ranges, this.options)
+        drawRanges(this.ranges, this.options);
+
+        var data = buildData(this.scores, this.scales);
+        console.log('===> DATA :: ', data);
 
         //add chart cursor
         chart.cursor = new am4charts.XYCursor();
