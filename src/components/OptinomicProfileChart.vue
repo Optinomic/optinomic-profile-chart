@@ -1,5 +1,5 @@
 <template>
-    <div class="hello" ref="chartdiv">
+    <div class="chart_container" ref="chartdiv">
     </div>
 </template>
 
@@ -11,37 +11,99 @@ am4core.useTheme(am4themes_animated);
 
 
 export default {
-    name: 'HelloWorld',
+    name: 'OptinomicProfileChart',
+    props: {
+        options: {
+            type: Object,
+            default: null
+        },
+        ranges: {
+            type: Array,
+            default: null
+        }
+    },
+    methods: {},
     mounted() {
+
+        // ---------------------------------
+        // Functions
+        // ---------------------------------
+        var drawRanges = function(ranges, options) {
+            console.warn('drawRanges :: ', ranges);
+
+            ranges.forEach(function(r) {
+                var range = valueAxis.axisRanges.create();
+                range.value = r.range_start;
+                range.endValue = r.range_stop;
+                range.axisFill.fill = am4core.color(r.color);
+                range.axisFill.fillOpacity = options.range_alpha;
+                // range.grid.stroke = am4core.color(r.color);
+                // range.grid.strokeOpacity = 0.8;
+
+                var range_line_left = valueAxis.axisRanges.create();
+                range_line_left.value = r.range_start;
+                range_line_left.endValue = r.range_start + 0.1;
+                range_line_left.axisFill.fill = am4core.color(r.color);
+                range_line_left.axisFill.fillOpacity = 0.3;
+
+                // var range_line_right = valueAxis.axisRanges.create();
+                // range_line_right.value = r.range_stop - 0.1;
+                // range_line_right.endValue = r.range_stop;
+                // range_line_right.axisFill.fill = am4core.color(r.color);
+                // range_line_right.axisFill.fillOpacity = 0.3;
+
+
+                range.label.text = r.text;
+                range.label.fill = am4core.color("black");
+                range.label.fillOpacity = 0.5;
+
+                range.label.inside = true;
+                range.label.location = 1;
+                range.label.rotation = 90;
+                range.label.margin = 5;
+                range.label.adapter.add("horizontalCenter", function() {
+                    return "left";
+                });
+                range.label.adapter.add("verticalCenter", function() {
+                    return "top";
+                });
+
+            }.bind(this));
+
+
+        };
+
+
         let chart = am4core.create(this.$refs.chartdiv, am4charts.XYChart);
+
         chart.data = [{
             "year": "Resilienz",
-            "income": 23.5,
-            "expenses": 18.1,
+            "income": 3.5,
+            "expenses": 8.1,
             "cs_start": 5,
             "cs_end": 30
         }, {
             "year": "2006",
-            "income": 26.2,
-            "expenses": 22.8,
+            "income": 6.2,
+            "expenses": 2.8,
             "cs_start": 8,
             "cs_end": 21
         }, {
             "year": "2007",
-            "income": 30.1,
-            "expenses": 23.9,
+            "income": 0.1,
+            "expenses": 3.9,
             "cs_start": 12,
             "cs_end": 15
         }, {
             "year": "2008",
-            "income": 29.5,
-            "expenses": 25.1,
+            "income": 9.5,
+            "expenses": 5.1,
             "cs_start": 11,
             "cs_end": 23
         }, {
             "year": "2009",
-            "income": 24.6,
-            "expenses": 25,
+            "income": 4.6,
+            "expenses": 5,
             "cs_start": 9,
             "cs_end": 28
         }];
@@ -56,8 +118,8 @@ export default {
         //create value axis for income and expenses
         var valueAxis = chart.xAxes.push(new am4charts.ValueAxis());
         valueAxis.renderer.opposite = true;
-        valueAxis.min = -5;
-        valueAxis.max = 30;
+        valueAxis.min = this.options.min;
+        valueAxis.max = this.options.max;
 
         //create columns
         var series = chart.series.push(new am4charts.ColumnSeries());
@@ -83,25 +145,12 @@ export default {
         circleBullet.circle.strokeWidth = 16;
 
         // Ranges
-        var range = valueAxis.axisRanges.create();
-        range.value = 10;
-        range.endValue = 15;
-        range.axisFill.fill = am4core.color("red");
-        range.axisFill.fillOpacity = 0.2;
-        range.grid.strokeOpacity = 0.1;
-        range.label.text = "Goal";
-        range.label.fill = am4core.color("red");
-        range.label.fillOpacity = 0.7;
-        range.label.inside = true;
-        range.label.rotation = 90;
-        range.label.adapter.add("horizontalCenter", function() {
-            return "bottom";
-        });
+        drawRanges(this.ranges, this.options)
 
         //add chart cursor
         chart.cursor = new am4charts.XYCursor();
         // chart.cursor.behavior = "zoomY";
-        
+
         //add legend
         chart.legend = new am4charts.Legend();
         this.chart = chart;
@@ -116,7 +165,7 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.hello {
+.chart_container {
     width: 100%;
     height: 400px;
 }
