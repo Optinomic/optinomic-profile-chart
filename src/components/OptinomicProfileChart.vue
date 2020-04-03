@@ -42,6 +42,7 @@ export default {
         return {
             chart_data: {
                 type: Object,
+                default: null
             }
         }
     },
