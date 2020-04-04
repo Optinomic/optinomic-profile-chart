@@ -64,7 +64,7 @@ The following Properties are supported:
 Compared to [\<optinomic-chart-profile\>](https://github.com/Optinomic/optinomic-chart-profile), this option is no longer supported.
 
 ```JAVASCRIPT
-var options = {
+var start = {
   . . .
 };
 ```
