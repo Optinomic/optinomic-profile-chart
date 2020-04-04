@@ -6,7 +6,7 @@
 
 ## Porperties - Descripiton
 
-### Options
+### Options | Example
 
 ```JAVASCRIPT
 var options = {
@@ -25,29 +25,37 @@ var options = {
     "show_score_circles": true,
     "show_settings_block": true,
     "show_ranges_overview": true,
+    "show_range_text": true,
     "allow_toggle_settings_block": false,
     "range_alpha": 0.1,
     "vertical_grid_every_x": 1,
-    "norm_sample": "Z-Werte wurden aufgrund der Normstichprobe nach Franke (2000) berechnet (N=300).",
+    "norm_sample": "Z-Werte wurden aufgrund der Normstichprobe nach Ottiger (2020) berechnet (N=3500).",
     "response_title_path": "calculation.info.mz.mz_typ",
     "response_date_path": "calculation.info.filled",
     "dropout": "calculation.info.mz.dropout",
     "dropout_reason": "calculation.info.mz.dropout_reason"
 };
 ```
-#### Details
+#### Options | Details
+
+The following Properties are supported:
+
 | Property  |  Description  |
 |:---:|---|
 | __min__ | "auto" will find the min/max automatically for you. You can also hardcode the min or max by setting it as a number. _Default: "auto"_ |
 | __max__ | "auto" will find the min/max automatically for you. You can also hardcode the min or max by setting it as a number. _Default: "auto"_ |
 | __item_height__ | The height (px) of every scale from scales. _Default: 50_ |
-| __color_skin__ | measurements colors skin. Possible values so far are: `default`, `zebra`, `pink_dark_to_light`, `indigo_dark_to_light`, `grey_dark_to_light`  _Default: 'default'_ |
-| __show_settings_block__ | Should the elemet render the Settings-Tab? Bei `false` wird die Übersicht der Messungen angezeigt. _Default: True_ |
-| __allow_toggle_settings_block__ | Darf der User zwischen Übersicht und "Settings-Tab" hin und herwechseln? _Default: True_ |
+| __item_text_left__ | Space (px) of left axis  |
+| __item_text_right__ | Space (px) of right axis  |
+| __color_clinic_sample__ | Color for the Clinic Sample with a fillOpacity = 0.4  |
+| __show_score_profile_lines__ | Display score lines in profiles? _Default: false_
+| __show_score_circles__ | Display score bullets in profiles? _Default: true_
+| __show_range_text__ | *new* Display vertical Range Interpretations? _Default: false_
+| __range_alpha__ | fillOpacity of Range Interpretations Colors. _Default: 0.3_
 | __response_title_path__ | Path to value: Expects a `String` - How should the measurement be called?  |
 | __response_date_path__ | Path to value: Expects a `String` - What ist the date of the measurment?  |
-| __dropout__ | Path to value: Expects a `boolean` - Is this measurement a dropout?  |
-| __dropout_reason__ | Path to value:: Expects a `String` - Reason for the dropout?  |
+| __dropout__ | *todo* Path to value: Expects a `boolean` - Is this measurement a dropout?  |
+| __dropout_reason__ | *todo* Path to value:: Expects a `String` - Reason for the dropout?  |
 
 
 

@@ -46,7 +46,9 @@ export default {
             }
         }
     },
-    methods: {},
+    methods: {
+
+    },
     computed: {
         getChartHeight() {
             var height = (this.scales.length + 2) * this.options.item_height;
@@ -61,6 +63,18 @@ export default {
         // ---------------------------------
         // Functions
         // ---------------------------------
+
+        var hasValue = function(value) {
+            try {
+                if ((value === null) || (value === "null") || (value === undefined) || (value === "")) {
+                    return false;
+                } else {
+                    return true;
+                };
+            } catch (e) {
+                return false;
+            };
+        };
 
         var buildData = function(scores_orig, scales, options, cs, cs_dive) {
             try {
@@ -168,10 +182,6 @@ export default {
 
                         scale.cs_start = scale.cs_data.mean_1sd_min;
                         scale.cs_end = scale.cs_data.mean_1sd_plus;
-
-                                console.error('HERE', scale);
-
-
                     };
 
 
@@ -205,7 +215,7 @@ export default {
                     range.value = range_start;
                     range.endValue = range_stop;
                     range.axisFill.fill = am4core.color(r.color);
-                    range.axisFill.fillOpacity = options.range_alpha;
+                    range.axisFill.fillOpacity = options.range_alpha || 0.3;
                     //range.grid.stroke = am4core.color(r.color);
                     //range.grid.strokeOpacity = 0.8;
 
@@ -279,7 +289,7 @@ export default {
             }
         };
 
-        var drawProfiles = function(data_object) {
+        var drawProfiles = function(data_object, options) {
             try {
                 // console.warn('drawProfiles :: ', data_object);
                 var stroke_width = 6;
@@ -293,29 +303,59 @@ export default {
                     lineSeries.strokeWidth = stroke_width;
                     lineSeries.tooltipText = val.name + ": {valueX.value}";
 
-                    //add bullets
-                    var circleBullet = lineSeries.bullets.push(new am4charts.CircleBullet());
-                    circleBullet.circle.fill = am4core.color("#fff");
-                    circleBullet.circle.strokeWidth = stroke_width;
+
+                    //add bullets | show_score_circles
+                    var show_score_circles = true;
+                    if ((hasValue(options.show_score_circles)) && (options.show_score_circles === false)) {
+                        show_score_circles = false;
+                    };
+                    if (show_score_circles) {
+                        var circleBullet = lineSeries.bullets.push(new am4charts.CircleBullet());
+                        circleBullet.circle.fill = am4core.color("#fff");
+                        circleBullet.circle.strokeWidth = stroke_width;
+                    };
+
+                    //add line-bullets | show_score_profile_line
+                    var show_score_profile_line = false;
+                    if ((hasValue(options.show_score_profile_line)) && (options.show_score_profile_line === true)) {
+                        show_score_profile_line = true;
+                    };
+                    show_score_profile_line = true;
+                    if (show_score_profile_line) {
+                        var lineBullet = lineSeries.bullets.push(new am4charts.Bullet());
+                        var square = lineBullet.createChild(am4core.Rectangle);
+                        square.width = stroke_width;
+                        square.height = options.item_height;
+                        square.horizontalCenter = "middle";
+                        square.verticalCenter = "middle";
+                    };
+
                 }.bind(this));
             } catch (e) {
                 console.error('Error: drawProfiles', e);
             }
         }
 
-        var drawCS = function(cs) {
-            console.warn('drawCS :: ', cs);
+        var drawCS = function(cs, options) {
+            // console.warn('drawCS :: ', cs);
 
             var series = chart.series.push(new am4charts.ColumnSeries());
             series.dataFields.categoryY = "category_left";
             series.dataFields.valueX = "cs_end";
             series.dataFields.openValueX = "cs_start";
             series.name = "Klinikstichprobe";
+            series.tooltipText = "{openValueX.value} - {valueX.value}";
+
             series.columns.template.fill = "black";
             series.columns.template.stroke = "black";
             series.columns.template.fillOpacity = 0.2;
             series.columns.template.strokeOpacity = 0.2;
-            series.tooltipText = "{openValueX.value} - {valueX.value}";
+            if (hasValue(options.color_clinic_sample)) {
+                series.columns.template.fill = options.color_clinic_sample;
+                series.columns.template.stroke = options.color_clinic_sample;
+                series.columns.template.fillOpacity = 0.4;
+                series.columns.template.strokeOpacity = 0.4;
+            };
         }
 
         // Create Chart & add Data
@@ -328,10 +368,8 @@ export default {
         // Create value axis for captures
         var valueAxis = chart.xAxes.push(new am4charts.ValueAxis());
         valueAxis.renderer.opposite = true;
-        //valueAxis.min = this.options.min;
-        //valueAxis.max = this.options.max;
-        valueAxis.minX = this.options.min;
-        valueAxis.maxX = this.options.max;
+        valueAxis.min = this.options.min;
+        valueAxis.max = this.options.max;
 
         // Add Data to Chart
         var chart_data = buildData(this.scores, this.scales, this.options, this.clinic_samples, this.clinic_sample_dive);
@@ -343,10 +381,10 @@ export default {
 
 
         // Klinikstichprobe
-        drawCS(this.clinic_samples);
+        drawCS(this.clinic_samples, this.options);
 
         // Profiles
-        drawProfiles(chart_data);
+        drawProfiles(chart_data, this.options);
 
         // Ranges
         drawRanges(this.ranges, this.options);
