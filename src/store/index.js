@@ -19,7 +19,7 @@ export default new Vuex.Store({
           "show_ranges_overview": false,
           "show_scale_text": true,
           "show_score_vertical_line": false,
-          "show_score_profile_line": true,
+          "show_score_profile_line": false,
           "show_score_circles": true,
           "show_settings_block": false,
           "show_range_text": true,

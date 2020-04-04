@@ -58,8 +58,6 @@ export default {
     },
     mounted() {
 
-        console.error('clinic_samples', this.clinic_samples);
-
         // ---------------------------------
         // Functions
         // ---------------------------------
@@ -316,12 +314,11 @@ export default {
                     };
 
                     //add line-bullets | show_score_profile_line
-                    var show_score_profile_line = false;
-                    if ((hasValue(options.show_score_profile_line)) && (options.show_score_profile_line === true)) {
-                        show_score_profile_line = true;
+                    var show_score_vertical_line = false;
+                    if ((hasValue(options.show_score_profile_line)) && (options.show_score_vertical_line === true)) {
+                        show_score_vertical_line = true;
                     };
-                    show_score_profile_line = true;
-                    if (show_score_profile_line) {
+                    if (show_score_vertical_line) {
                         var lineBullet = lineSeries.bullets.push(new am4charts.Bullet());
                         var square = lineBullet.createChild(am4core.Rectangle);
                         square.width = stroke_width;

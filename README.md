@@ -48,7 +48,7 @@ The following Properties are supported:
 | __item_text_left__ | Space (px) of left axis  |
 | __item_text_right__ | Space (px) of right axis  |
 | __color_clinic_sample__ | Color for the Clinic Sample with a fillOpacity = 0.4  |
-| __show_score_profile_lines__ | Display score lines in profiles? _Default: false_
+| __show_score_vertical_line__ | Display vertical score lines in profiles? _Default: false_
 | __show_score_circles__ | Display score bullets in profiles? _Default: true_
 | __show_range_text__ | *new* Display vertical Range Interpretations? _Default: false_
 | __range_alpha__ | fillOpacity of Range Interpretations Colors. _Default: 0.3_
