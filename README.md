@@ -4,7 +4,12 @@
 `optinomic-profile-chart` creates awesome Profile-Charts for [Optionmic](https://www.optinomic.com/)-Apps.   
 This is basically a rewrite of the polymer element [\<optinomic-chart-profile\>](https://github.com/Optinomic/optinomic-chart-profile) in [Vue](https://vuejs.org/) using [AMcharts](https://www.amcharts.com/).
 
+### Example (Scales)
 ![optinomic_chart](https://user-images.githubusercontent.com/2470873/78606723-10108b00-785e-11ea-94c2-4296b272e3b9.png)
+
+### Example (Single Scale)
+![optinomic_chart_single](https://user-images.githubusercontent.com/2470873/78610034-4ea94400-7864-11ea-87e3-d3cc90177ff5.jpg)
+
 
 ## Porperties - Descripiton
 
