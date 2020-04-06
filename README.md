@@ -13,6 +13,9 @@ This is basically a rewrite of the polymer element [\<optinomic-chart-profile\>]
 
 ## Porperties - Descripiton
 
+You can browse examples of \<optinomic-profile-chart\> inside this repository @ [./src/assets/chart_config](https://github.com/Optinomic/optinomic-profile-chart/tree/master/src/assets/chart_config).    
+Also check the description below:
+
 ### Options | Example
 
 ```JAVASCRIPT
