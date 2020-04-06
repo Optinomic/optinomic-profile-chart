@@ -205,19 +205,27 @@ export default {
           );
 
           // Fill CS Text
-          cs.dimensions.forEach(
-            function(dim, dim_id) {
-              if (data_object.cs_sample_text !== "") {
-                data_object.cs_sample_text = data_object.cs_sample_text + " | ";
-              }
-              data_object.cs_sample_text =
-                data_object.cs_sample_text +
-                dim.array[data_object.dive[dim_id]].text;
-            }.bind(this)
-          );
+          // Clinic Samples hinzufügen;
+          if (cs !== null) {
+            cs.dimensions.forEach(
+              function(dim, dim_id) {
+                if (data_object.cs_sample_text !== "") {
+                  data_object.cs_sample_text =
+                    data_object.cs_sample_text + " | ";
+                }
+                data_object.cs_sample_text =
+                  data_object.cs_sample_text +
+                  dim.array[data_object.dive[dim_id]].text;
+              }.bind(this)
+            );
 
-          data_object.cs_sample_text =
-            data_object.cs_sample_text + " (N=" + data_object.cs_sample_n + ")";
+            data_object.cs_sample_text =
+              data_object.cs_sample_text +
+              " (N=" +
+              data_object.cs_sample_n +
+              ")";
+          }
+
           // console.warn('buildData :: ', data_object);
           return data_object;
         } catch (e) {
@@ -368,6 +376,12 @@ export default {
                 square.height = options.item_height;
                 square.horizontalCenter = "middle";
                 square.verticalCenter = "middle";
+                var circle = lineBullet.createChild(am4core.Circle);
+                circle.fill = "white";
+                circle.radius = stroke_width / 2;
+                circle.height = options.item_height;
+                circle.horizontalCenter = "middle";
+                circle.verticalCenter = "middle";
               }
             }.bind(this)
           );
@@ -462,10 +476,12 @@ export default {
       container.height = am4core.percent(100);
       container.layout = "vertical";
 
-      var container_top = container.createChild(am4core.Container);
-      container_top.width = am4core.percent(100);
-      container_top.height = this.container_top_height;
-      container_top.layout = "horizontal";
+      if (this.clinic_samples !== null && this.clinic_samples_dive !== null) {
+        var container_top = container.createChild(am4core.Container);
+        container_top.width = am4core.percent(100);
+        container_top.height = this.container_top_height;
+        container_top.layout = "horizontal";
+      }
 
       var container_chart = container.createChild(am4core.Container);
       container_chart.width = am4core.percent(100);
@@ -496,17 +512,19 @@ export default {
       chart.data = chart_data.data;
       this.chart_data = chart_data;
 
-      drawNormSampleText(
-        this.options,
-        this.container_top_height,
-        this.chart_data
-      );
-
       // Zeichne Achsen
       drawAxis(this.options);
 
       // Klinikstichprobe
-      drawCS(this.clinic_samples, this.options);
+      if (this.clinic_samples !== null && this.clinic_samples_dive !== null) {
+        drawCS(this.clinic_samples, this.options);
+
+        drawNormSampleText(
+          this.options,
+          this.container_top_height,
+          this.chart_data
+        );
+      }
 
       // Profiles
       drawProfiles(chart_data, this.options);
@@ -528,7 +546,7 @@ export default {
   computed: {
     getChartHeight() {
       var height =
-        (this.scales.length + 3) * this.options.item_height +
+        (this.scales.length + 2) * this.options.item_height +
         this.container_top_height;
       // height = height + this.options.item_height;
       return height;
