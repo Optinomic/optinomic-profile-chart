@@ -1,7 +1,7 @@
 
 # \<optinomic-profile-chart\>
 
-`optinomic-profile-chart` creates awesome Profile-Charts for [Optionmic](https://www.optinomic.com/)-Apps.   
+`<optinomic-profile-chart>` creates awesome Profile-Charts for [Optionmic](https://www.optinomic.com/)-Apps.   
 This is basically a rewrite of the polymer element [\<optinomic-chart-profile\>](https://github.com/Optinomic/optinomic-chart-profile) in [Vue](https://vuejs.org/) using [AMcharts](https://www.amcharts.com/).
 
 ### Example (Scales)
@@ -66,6 +66,21 @@ The following Properties are supported:
 
 
 
+### Clinic Samples
+
+
+```JAVASCRIPT
+var clinic_samples = {
+  . . .
+};
+```
+
+To minify given `clinic_samples` - check:
+
+*Demo:*  http://clinicsamplesminifier.optinomic.org/     
+*Github:* https://github.com/ottigerb/clinicsamples_minifier/
+
+
 ### Start (Depreciated)
 
 Compared to [\<optinomic-chart-profile\>](https://github.com/Optinomic/optinomic-chart-profile), this option is no longer supported.
@@ -75,8 +90,6 @@ var start = {
   . . .
 };
 ```
-
-
 
 
 ## Development
