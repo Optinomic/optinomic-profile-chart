@@ -3,17 +3,30 @@ import Vuex from "vuex";
 
 Vue.use(Vuex);
 
+// --------------------------
+// STATE - Data
+// --------------------------
 import imp_apps from "../assets/state_data/apps.json";
-//import imp_data_apps from "../assets/state_data/data_apps__test_jacqueline.json";
-import imp_data_apps from "../assets/state_data/data_apps__demo_muster.json";
 
+// import imp_data_apps from "../assets/state_data/data_apps__demo_muster.json";
+// import imp_data_apps from "../assets/state_data/data_apps__mueller_fridolin.json";
+// import imp_data_apps from "../assets/state_data/data_apps__muster_frieda.json";
+import imp_data_apps from "../assets/state_data/data_apps__test_jacqueline.json";
+
+// --------------------------
+// Charts
+// --------------------------
 import imp_chart_bdi from "../assets/chart_config/bdi.json";
 import imp_chart_bscl from "../assets/chart_config/bscl.json";
+import imp_chart_isk from "../assets/chart_config/isk.json";
+import imp_chart_who from "../assets/chart_config/who.json";
 
 export default new Vuex.Store({
   state: {
     bscl_chart: imp_chart_bscl,
     bdi_chart: imp_chart_bdi,
+    isk_chart: imp_chart_isk,
+    who_chart: imp_chart_who,
     apps: imp_apps,
     table_of_contents: [
       {

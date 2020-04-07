@@ -130,20 +130,31 @@ export default {
             return out;
           };
 
-          var getDataDive = function(data, dive) {
-            var return_ob = {};
+          var getDataDive = function(_d, dive, cs_var) {
+            var return_obj = {};
+            var build_var = "";
             dive.forEach(
-              function(_d) {
-                if (Array.isArray(data[_d])) {
-                  getDataDive(data[_d], dive.shift());
-                } else {
-                  if ("statistics" in data[_d]) {
-                    return_ob = data[_d].statistics;
-                  }
-                }
+              function(_pos) {
+                build_var = build_var + _pos;
+                build_var = build_var + ".";
               }.bind(this)
             );
-            return return_ob;
+            build_var = build_var + "statistics." + cs_var;
+            var data = flatten(_d);
+
+            return_obj.n = data[build_var + ".n"];
+            return_obj.max = data[build_var + ".max"];
+            return_obj.min = data[build_var + ".min"];
+            return_obj.mean = data[build_var + ".mean"];
+            return_obj.standard_deviation =
+              data[build_var + ".standard_deviation"];
+            return_obj.mean_1sd_min = data[build_var + ".mean_1sd_min"];
+            return_obj.mean_1sd_plus = data[build_var + ".mean_1sd_plus"];
+            return_obj.variance = data[build_var + ".variance"];
+            return_obj.z_score_min = data[build_var + ".z_score_min"];
+            return_obj.z_score_max = data[build_var + ".z_score_max"];
+
+            return return_obj;
           };
 
           scales.forEach(
@@ -197,14 +208,32 @@ export default {
                 }
 
                 // get current statisics object
-                scale.cs_full_data = getDataDive(cs.data, cs_dive);
-                scale.cs_data = scale.cs_full_data[scale.clinic_sample_var];
-                data_object.cs_sample_n = scale.cs_data.n;
-                // console.error("CS", scale.cs_data);
+                scale.cs_data = getDataDive(
+                  cs.data,
+                  cs_dive,
+                  scale.clinic_sample_var
+                );
 
-                scale.cs_mean = scale.cs_data.mean;
-                scale.cs_start = scale.cs_data.mean_1sd_min;
-                scale.cs_end = scale.cs_data.mean_1sd_plus;
+                scale.cs_mean = null;
+                scale.cs_start = null;
+                scale.cs_end = null;
+                data_object.cs_sample_n = "...";
+
+                if (scale.cs_data) {
+                  scale.cs_mean = scale.cs_data.mean;
+                  scale.cs_start = scale.cs_data.mean_1sd_min;
+                  scale.cs_end = scale.cs_data.mean_1sd_plus;
+                  data_object.cs_sample_n = scale.cs_data.n;
+                } else {
+                  console.error(
+                    "--> CS",
+                    cs.data,
+                    cs_dive,
+                    scale.cs_full_data,
+                    s,
+                    sid
+                  );
+                }
               }
 
               // publish
@@ -227,11 +256,14 @@ export default {
               }.bind(this)
             );
 
-            data_object.cs_sample_text =
-              data_object.cs_sample_text +
-              " (N=" +
-              data_object.cs_sample_n +
-              ")";
+            if (data_object !== undefined) {
+              // console.error('HERE', data_object);
+              data_object.cs_sample_text =
+                data_object.cs_sample_text +
+                " (N=" +
+                data_object.cs_sample_n +
+                ")";
+            }
           }
 
           // console.warn('buildData :: ', data_object);

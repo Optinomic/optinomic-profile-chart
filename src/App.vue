@@ -16,8 +16,9 @@
 
 <script>
 import OptinomicProfileChart from "./components/OptinomicProfileChart.vue";
-
 import cs_bscl from "./assets/clinic_samples/optimized/cs_bscl.json";
+import cs_isk from "./assets/clinic_samples/optimized/cs_isk.json";
+import cs_who from "./assets/clinic_samples/optimized/cs_whoqol.json";
 
 export default {
   name: "App",
@@ -31,6 +32,16 @@ export default {
         {
           title: "BDI-II",
           name: "bdi_chart"
+        },
+        {
+          title: "ISK-K",
+          name: "isk_chart",
+          id: "ch.suedhang.apps.isk.production"
+        },
+        {
+          title: "WHO-QOL",
+          name: "who_chart",
+          id: "ch.suedhang.apps.whoqol.production"
         }
       ]
     };
@@ -69,6 +80,16 @@ export default {
           "ch.suedhang.apps.bdi.production"
         ];
       }
+      if (chart_current === "isk_chart") {
+        return_obj = this.$store.state.data_apps.data_object[
+          "ch.suedhang.apps.isk.production"
+        ];
+      }
+      if (chart_current === "who_chart") {
+        return_obj = this.$store.state.data_apps.data_object[
+          "ch.suedhang.apps.whoqol.production"
+        ];
+      }
       return return_obj;
     },
     getChartCS(chart_current) {
@@ -79,15 +100,18 @@ export default {
       if (chart_current === "bdi_chart") {
         return_obj = null;
       }
+      if (chart_current === "isk_chart") {
+        return_obj = cs_isk;
+      }
+      if (chart_current === "who_chart") {
+        return_obj = cs_who;
+      }
       return return_obj;
     },
     getChartCSDive(chart_current) {
       var return_array = null;
       if (chart_current === "bscl_chart") {
         return_array = [4];
-      }
-      if (chart_current === "bdi_chart") {
-        return_array = null;
       }
       return return_array;
     }
