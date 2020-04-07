@@ -1,17 +1,29 @@
 <template>
-  <div id="app" style="margin:30px;">
-    <div v-for="app in app_charts" :key="app.name" style="margin-bottom:60px;">
-      <h1 class="display-1 font-weight-thin" v-text="app.title"></h1>
-      <OptinomicProfileChart
-        :options="getChartOptions(app.name)"
-        :ranges="getChartRanges(app.name)"
-        :scales="getChartScales(app.name)"
-        :scores="getChartData(app.name)"
-        :clinic_samples="getChartCS(app.name)"
-        :clinic_sample_dive="getChartCSDive(app.name)"
-      ></OptinomicProfileChart>
-    </div>
-  </div>
+  <v-app id="app" style="margin:60px;">
+    <v-content>
+      <div v-for="app in app_charts" :key="app.name" style="margin-bottom:60px;">
+        <v-divider></v-divider>
+        <h1 class="mt-12 mb-2 display-1 font-weight-thin" v-text="app.title"></h1>
+        <OptinomicProfileChart
+          :options="getChartOptions(app.name)"
+          :ranges="getChartRanges(app.name)"
+          :scales="getChartScales(app.name)"
+          :scores="getChartData(app.name)"
+          :clinic_samples="getChartCS(app.name)"
+          :clinic_sample_dive="getChartCSDive(app.name)"
+        ></OptinomicProfileChart>
+      </div>
+      <v-container fluid>
+        <v-row align="center">
+          <v-col class="d-flex" cols="12" sm="6">
+            <v-select
+              label="Standard"
+            ></v-select>
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-content>
+  </v-app>
 </template>
 
 <script>
@@ -130,6 +142,6 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+  margin: 60px;
 }
 </style>
