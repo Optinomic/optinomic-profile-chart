@@ -64,8 +64,8 @@ The following Properties are supported:
 | __range_alpha__ | fillOpacity of Range Interpretations Colors. _Default: 0.3_
 | __response_title_path__ | Path to value: Expects a `String` - How should the measurement be called?  |
 | __response_date_path__ | Path to value: Expects a `String` - What ist the date of the measurment?  |
-| __dropout__ | *todo* Path to value: Expects a `boolean` - Is this measurement a dropout?  |
-| __dropout_reason__ | *todo* Path to value:: Expects a `String` - Reason for the dropout?  |
+| __dropout__ | Path to value: Expects a `boolean` - Is this measurement a dropout?  |
+| __dropout_reason__ | Path to value:: Expects a `String` - Reason for the dropout?  |
 
 
 
