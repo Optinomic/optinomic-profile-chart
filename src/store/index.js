@@ -4,7 +4,9 @@ import Vuex from "vuex";
 Vue.use(Vuex);
 
 import imp_apps from "../assets/state_data/apps.json";
-import imp_data_apps from "../assets/state_data/data_apps__test_jacqueline.json";
+//import imp_data_apps from "../assets/state_data/data_apps__test_jacqueline.json";
+import imp_data_apps from "../assets/state_data/data_apps__demo_muster.json";
+
 import imp_chart_bdi from "../assets/chart_config/bdi.json";
 import imp_chart_bscl from "../assets/chart_config/bscl.json";
 

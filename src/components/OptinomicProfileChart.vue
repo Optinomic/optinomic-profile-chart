@@ -165,8 +165,16 @@ export default {
                     var obj = {
                       category: capture_name,
                       name: sr[options.response_title_path],
-                      date: sr[options.response_date_path]
+                      date: sr[options.response_date_path],
+                      dropout: false
                     };
+
+                    // Dropout
+                    if (sr[options.dropout] === true) {
+                      obj.name =
+                        "[red font-size: 12px]" + sr[options.dropout_reason];
+                      obj.dropout = true;
+                    }
                     data_object.captures.push(obj);
                   }
                   scale[capture_name] = sr[scale.score_path];
@@ -333,13 +341,37 @@ export default {
           // console.warn('drawProfiles :: ', data_object);
           var stroke_width = 6;
 
+          var getDateCH = function(date, full) {
+            var dateObj = new Date(date);
+            var o = {};
+            if (full === true) {
+              o = {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+              };
+            } else {
+              o = {
+                year: "numeric",
+                month: "numeric",
+                day: "numeric"
+              };
+            }
+            return dateObj.toLocaleDateString("de-DE", o);
+          };
+
           data_object.captures.forEach(
             function(val) {
               //create line
               var lineSeries = chart.series.push(new am4charts.LineSeries());
               lineSeries.dataFields.categoryY = "category_left";
               lineSeries.dataFields.valueX = val.category;
-              lineSeries.name = new Date(val.date);
+              lineSeries.name =
+                "[font-size: 14px]" +
+                getDateCH(val.date) +
+                "[/]\n[font-size: 12px]" +
+                val.name;
               lineSeries.strokeWidth = stroke_width;
               lineSeries.tooltipText = val.name + ": {valueX.value}";
 
@@ -397,7 +429,7 @@ export default {
         series.dataFields.categoryY = "category_left";
         series.dataFields.valueX = "cs_end";
         series.dataFields.openValueX = "cs_start";
-        series.name = "Klinikstichprobe";
+        series.name = "[font-size: 12px] Klinikstichprobe";
         series.tooltipText = "{openValueX.value} - {valueX.value}";
 
         if (hasValue(options.color_clinic_sample)) {
@@ -515,6 +547,12 @@ export default {
       // Zeichne Achsen
       drawAxis(this.options);
 
+      // Profiles
+      drawProfiles(chart_data, this.options);
+
+      // Ranges
+      drawRanges(this.ranges, this.options);
+
       // Klinikstichprobe
       if (this.clinic_samples !== null && this.clinic_samples_dive !== null) {
         drawCS(this.clinic_samples, this.options);
@@ -525,12 +563,6 @@ export default {
           this.chart_data
         );
       }
-
-      // Profiles
-      drawProfiles(chart_data, this.options);
-
-      // Ranges
-      drawRanges(this.ranges, this.options);
 
       // add chart cursor
       chart.cursor = new am4charts.XYCursor();
@@ -550,15 +582,6 @@ export default {
         this.container_top_height;
       // height = height + this.options.item_height;
       return height;
-    },
-    getTextCS() {
-      var text = "";
-      try {
-        console.log("getTextCS", text);
-      } catch (e) {
-        console.error("getTextCS", e);
-      }
-      return text;
     }
   },
   mounted() {
