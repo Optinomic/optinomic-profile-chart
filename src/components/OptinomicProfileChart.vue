@@ -1,8 +1,29 @@
 <template>
-  <div
-    v-bind:style="{ width: '100%', height: getChartHeight + 'px' }"
-    ref="chartdiv"
-  ></div>
+  <div ref="full_chart">
+    <div
+      v-bind:style="{ width: '100%', height: getChartHeight + 'px' }"
+      ref="chartdiv"
+    ></div>
+    <v-container fluid v-if="clinic_samples">
+      <v-row align="center" v-if="chart_data.dive">
+        <v-col
+          class="d-flex"
+          cols="12"
+          sm="4"
+          v-for="(dim, index) in clinic_samples.dimensions"
+          :key="index"
+        >
+          <v-select
+            :label="dim.name"
+            :items="dim.array"
+            item-value="id"
+            v-model="chart_data.dive[index]"
+            v-on:change="updateData"
+          ></v-select>
+        </v-col>
+      </v-row>
+    </v-container>
+  </div>
 </template>
 
 <script>
@@ -41,14 +62,228 @@ export default {
   },
   data: function() {
     return {
+      chart: null,
       chart_data: {
-        type: Object,
-        default: null
+        dive: null
       },
       container_top_height: 18
     };
   },
+  watch: {
+    chart_data: function () {
+      // console.log('DATA Changed', newData, oldData);
+      this.chart.data = this.chart_data.data;
+      this.chart.invalidateRawData();
+    }
+  },
   methods: {
+    updateData() {
+      // User did something
+      this.chart_data = this.dataBuild();
+    },
+    dataBuild() {
+      // Prepare Data
+      var scores_orig = this.scores;
+      var scales = this.scales;
+      var options = this.options;
+      var cs = this.clinic_samples;
+      var cs_dive = this.getCSDive;
+
+      try {
+        var scores = JSON.parse(JSON.stringify(scores_orig));
+        var data_object = {
+          data: [],
+          captures: [],
+          dive: cs_dive,
+          cs_sample_n: 0,
+          cs_sample_text: ""
+        };
+
+        var getCategoryText = function(title, text) {
+          var r = "";
+          if (title !== "") {
+            r = r + title;
+          }
+          if (title !== "" && text !== "") {
+            r = r + ": ";
+          }
+          if (text !== "") {
+            r = r + text;
+          }
+          return "[font-size:11px]" + r + "[/]";
+        };
+
+        var flatten = function(obj, name, stem) {
+          var out = {};
+          var newStem =
+            typeof stem !== "undefined" && stem !== ""
+              ? stem + "." + name
+              : name;
+
+          if (typeof obj !== "object") {
+            out[newStem] = obj;
+            return out;
+          }
+
+          for (var p in obj) {
+            var prop = flatten(obj[p], p, newStem);
+            out = merge([out, prop]);
+          }
+
+          return out;
+        };
+
+        var merge = function(objects) {
+          var out = {};
+
+          for (var i = 0; i < objects.length; i++) {
+            for (var p in objects[i]) {
+              out[p] = objects[i][p];
+            }
+          }
+
+          return out;
+        };
+
+        var getDataDive = function(_d, dive, cs_var) {
+          var return_obj = {};
+          var build_var = "";
+          dive.forEach(
+            function(_pos) {
+              build_var = build_var + _pos;
+              build_var = build_var + ".";
+            }.bind(this)
+          );
+          build_var = build_var + "statistics." + cs_var;
+          var data = flatten(_d);
+
+          return_obj.n = data[build_var + ".n"];
+          return_obj.max = data[build_var + ".max"];
+          return_obj.min = data[build_var + ".min"];
+          return_obj.mean = data[build_var + ".mean"];
+          return_obj.standard_deviation =
+            data[build_var + ".standard_deviation"];
+          return_obj.mean_1sd_min = data[build_var + ".mean_1sd_min"];
+          return_obj.mean_1sd_plus = data[build_var + ".mean_1sd_plus"];
+          return_obj.variance = data[build_var + ".variance"];
+          return_obj.z_score_min = data[build_var + ".z_score_min"];
+          return_obj.z_score_max = data[build_var + ".z_score_max"];
+
+          return return_obj;
+        };
+
+        scales.forEach(
+          function(s, sid) {
+            var scale = Object.assign({}, s);
+            // Category
+            scale.category_left = getCategoryText(s.left_title, s.left_text);
+            scale.category_right = getCategoryText(s.right_title, s.right_text);
+
+            // Messungen hinzufügen
+            scores.data.forEach(
+              function(_sr) {
+                var sr = flatten(_sr);
+                var capture_name = "capture_event_" + sr.event_id;
+                if (sid === 0) {
+                  var obj = {
+                    category: capture_name,
+                    name: sr[options.response_title_path],
+                    date: sr[options.response_date_path],
+                    dropout: false
+                  };
+
+                  // Dropout
+                  if (sr[options.dropout] === true) {
+                    obj.name =
+                      "[red font-size: 12px]" + sr[options.dropout_reason];
+                    obj.dropout = true;
+                  }
+                  data_object.captures.push(obj);
+                }
+                scale[capture_name] = sr[scale.score_path];
+              }.bind(this)
+            );
+
+            // Clinic Samples hinzufügen;
+            if (cs !== null) {
+              // If no Dive is given - always last.
+              if (cs_dive === null) {
+                cs_dive = [];
+                if ("dimensions" in cs) {
+                  cs.dimensions.forEach(
+                    function(dim) {
+                      cs_dive.push(dim.array.length - 1);
+                    }.bind(this)
+                  );
+                  data_object.dive = cs_dive;
+                }
+              }
+
+              // get current statisics object
+              scale.cs_data = getDataDive(
+                cs.data,
+                cs_dive,
+                scale.clinic_sample_var
+              );
+
+              scale.cs_mean = null;
+              scale.cs_start = null;
+              scale.cs_end = null;
+              data_object.cs_sample_n = "...";
+
+              if (scale.cs_data) {
+                scale.cs_mean = scale.cs_data.mean;
+                scale.cs_start = scale.cs_data.mean_1sd_min;
+                scale.cs_end = scale.cs_data.mean_1sd_plus;
+                data_object.cs_sample_n = scale.cs_data.n;
+              } else {
+                console.error(
+                  "--> CS",
+                  cs.data,
+                  cs_dive,
+                  scale.cs_full_data,
+                  s,
+                  sid
+                );
+              }
+            }
+
+            // publish
+            data_object.data.push(scale);
+          }.bind(this)
+        );
+
+        // Fill CS Text
+        // Clinic Samples hinzufügen;
+        if (cs !== null) {
+          cs.dimensions.forEach(
+            function(dim, dim_id) {
+              if (data_object.cs_sample_text !== "") {
+                data_object.cs_sample_text = data_object.cs_sample_text + " | ";
+              }
+              data_object.cs_sample_text =
+                data_object.cs_sample_text +
+                dim.array[data_object.dive[dim_id]].text;
+            }.bind(this)
+          );
+
+          if (data_object !== undefined) {
+            // console.error('HERE', data_object);
+            data_object.cs_sample_text =
+              data_object.cs_sample_text +
+              " (N=" +
+              data_object.cs_sample_n +
+              ")";
+          }
+        }
+
+        // console.warn('buildData :: ', data_object);
+        // this.chart_data = data_object;
+        return data_object;
+      } catch (e) {
+        console.error("Error: buildData", e);
+      }
+    },
     chartBuild() {
       // console.warn("BUILD CHART NOW!");
 
@@ -70,206 +305,6 @@ export default {
           }
         } catch (e) {
           return false;
-        }
-      };
-
-      var buildData = function(scores_orig, scales, options, cs, cs_dive) {
-        try {
-          var scores = JSON.parse(JSON.stringify(scores_orig));
-          var data_object = {
-            data: [],
-            captures: [],
-            dive: cs_dive,
-            cs_sample_n: 0,
-            cs_sample_text: ""
-          };
-
-          var getCategoryText = function(title, text) {
-            var r = "";
-            if (title !== "") {
-              r = r + title;
-            }
-            if (title !== "" && text !== "") {
-              r = r + ": ";
-            }
-            if (text !== "") {
-              r = r + text;
-            }
-            return "[font-size:11px]" + r + "[/]";
-          };
-
-          var flatten = function(obj, name, stem) {
-            var out = {};
-            var newStem =
-              typeof stem !== "undefined" && stem !== ""
-                ? stem + "." + name
-                : name;
-
-            if (typeof obj !== "object") {
-              out[newStem] = obj;
-              return out;
-            }
-
-            for (var p in obj) {
-              var prop = flatten(obj[p], p, newStem);
-              out = merge([out, prop]);
-            }
-
-            return out;
-          };
-
-          var merge = function(objects) {
-            var out = {};
-
-            for (var i = 0; i < objects.length; i++) {
-              for (var p in objects[i]) {
-                out[p] = objects[i][p];
-              }
-            }
-
-            return out;
-          };
-
-          var getDataDive = function(_d, dive, cs_var) {
-            var return_obj = {};
-            var build_var = "";
-            dive.forEach(
-              function(_pos) {
-                build_var = build_var + _pos;
-                build_var = build_var + ".";
-              }.bind(this)
-            );
-            build_var = build_var + "statistics." + cs_var;
-            var data = flatten(_d);
-
-            return_obj.n = data[build_var + ".n"];
-            return_obj.max = data[build_var + ".max"];
-            return_obj.min = data[build_var + ".min"];
-            return_obj.mean = data[build_var + ".mean"];
-            return_obj.standard_deviation =
-              data[build_var + ".standard_deviation"];
-            return_obj.mean_1sd_min = data[build_var + ".mean_1sd_min"];
-            return_obj.mean_1sd_plus = data[build_var + ".mean_1sd_plus"];
-            return_obj.variance = data[build_var + ".variance"];
-            return_obj.z_score_min = data[build_var + ".z_score_min"];
-            return_obj.z_score_max = data[build_var + ".z_score_max"];
-
-            return return_obj;
-          };
-
-          scales.forEach(
-            function(s, sid) {
-              var scale = Object.assign({}, s);
-              // Category
-              scale.category_left = getCategoryText(s.left_title, s.left_text);
-              scale.category_right = getCategoryText(
-                s.right_title,
-                s.right_text
-              );
-
-              // Messungen hinzufügen
-              scores.data.forEach(
-                function(_sr) {
-                  var sr = flatten(_sr);
-                  var capture_name = "capture_event_" + sr.event_id;
-                  if (sid === 0) {
-                    var obj = {
-                      category: capture_name,
-                      name: sr[options.response_title_path],
-                      date: sr[options.response_date_path],
-                      dropout: false
-                    };
-
-                    // Dropout
-                    if (sr[options.dropout] === true) {
-                      obj.name =
-                        "[red font-size: 12px]" + sr[options.dropout_reason];
-                      obj.dropout = true;
-                    }
-                    data_object.captures.push(obj);
-                  }
-                  scale[capture_name] = sr[scale.score_path];
-                }.bind(this)
-              );
-
-              // Clinic Samples hinzufügen;
-              if (cs !== null) {
-                // If no Dive is given - always last.
-                if (cs_dive === null) {
-                  cs_dive = [];
-                  if ("dimensions" in cs) {
-                    cs.dimensions.forEach(
-                      function(dim) {
-                        cs_dive.push(dim.array.length - 1);
-                      }.bind(this)
-                    );
-                    data_object.dive = cs_dive;
-                  }
-                }
-
-                // get current statisics object
-                scale.cs_data = getDataDive(
-                  cs.data,
-                  cs_dive,
-                  scale.clinic_sample_var
-                );
-
-                scale.cs_mean = null;
-                scale.cs_start = null;
-                scale.cs_end = null;
-                data_object.cs_sample_n = "...";
-
-                if (scale.cs_data) {
-                  scale.cs_mean = scale.cs_data.mean;
-                  scale.cs_start = scale.cs_data.mean_1sd_min;
-                  scale.cs_end = scale.cs_data.mean_1sd_plus;
-                  data_object.cs_sample_n = scale.cs_data.n;
-                } else {
-                  console.error(
-                    "--> CS",
-                    cs.data,
-                    cs_dive,
-                    scale.cs_full_data,
-                    s,
-                    sid
-                  );
-                }
-              }
-
-              // publish
-              data_object.data.push(scale);
-            }.bind(this)
-          );
-
-          // Fill CS Text
-          // Clinic Samples hinzufügen;
-          if (cs !== null) {
-            cs.dimensions.forEach(
-              function(dim, dim_id) {
-                if (data_object.cs_sample_text !== "") {
-                  data_object.cs_sample_text =
-                    data_object.cs_sample_text + " | ";
-                }
-                data_object.cs_sample_text =
-                  data_object.cs_sample_text +
-                  dim.array[data_object.dive[dim_id]].text;
-              }.bind(this)
-            );
-
-            if (data_object !== undefined) {
-              // console.error('HERE', data_object);
-              data_object.cs_sample_text =
-                data_object.cs_sample_text +
-                " (N=" +
-                data_object.cs_sample_n +
-                ")";
-            }
-          }
-
-          // console.warn('buildData :: ', data_object);
-          return data_object;
-        } catch (e) {
-          console.error("Error: buildData", e);
         }
       };
 
@@ -405,6 +440,7 @@ export default {
                 "[/]\n[font-size: 12px]" +
                 val.name;
               lineSeries.strokeWidth = stroke_width;
+              lineSeries.strokeOpacity = 1;
               lineSeries.tooltipText = val.name + ": {valueX.value}";
 
               //add bullets | show_score_circles
@@ -491,11 +527,12 @@ export default {
         var c_top_left = container_top.createChild(am4core.Container);
         c_top_left.width = options.item_text_left;
         c_top_left.height = container_top_height;
+        c_top_left.marginRight = fontSize / 2;
 
         var c_top_right = container_top.createChild(am4core.Container);
         c_top_right.width = am4core.percent(100);
         c_top_right.height = container_top_height;
-        c_top_right.marginLeft = fontSize;
+        c_top_right.marginLeft = fontSize / 2;
 
         var l1 = c_top_left.createChild(am4core.Label);
         l1.text = "Normstichprobe";
@@ -540,7 +577,7 @@ export default {
       container.height = am4core.percent(100);
       container.layout = "vertical";
 
-      if (this.clinic_samples !== null && this.clinic_samples_dive !== null) {
+      if (this.clinic_samples !== null) {
         var container_top = container.createChild(am4core.Container);
         container_top.width = am4core.percent(100);
         container_top.height = this.container_top_height;
@@ -551,6 +588,7 @@ export default {
       container_chart.width = am4core.percent(100);
       container_chart.height = am4core.percent(100);
       container_chart.toFront();
+
 
       // Create Chart & add Data
       let chart = container_chart.createChild(am4charts.XYChart);
@@ -566,27 +604,17 @@ export default {
       valueAxis.max = this.options.max;
 
       // Add Data to Chart
-      var chart_data = buildData(
-        this.scores,
-        this.scales,
-        this.options,
-        this.clinic_samples,
-        this.clinic_sample_dive
-      );
-      chart.data = chart_data.data;
-      this.chart_data = chart_data;
+      this.chart_data = this.dataBuild();
+      chart.data = this.chart_data.data;
 
       // Zeichne Achsen
       drawAxis(this.options);
-
-      // Profiles
-      drawProfiles(chart_data, this.options);
 
       // Ranges
       drawRanges(this.ranges, this.options);
 
       // Klinikstichprobe
-      if (this.clinic_samples !== null && this.clinic_samples_dive !== null) {
+      if (this.clinic_samples !== null) {
         drawCS(this.clinic_samples, this.options);
 
         drawNormSampleText(
@@ -595,6 +623,9 @@ export default {
           this.chart_data
         );
       }
+
+      // Profiles
+      drawProfiles(this.chart_data, this.options);
 
       // add chart cursor
       chart.cursor = new am4charts.XYCursor();
@@ -608,6 +639,13 @@ export default {
     }
   },
   computed: {
+    getCSDive() {
+      if (this.chart_data.dive) {
+        return this.chart_data.dive;
+      } else {
+        return this.clinic_sample_dive;
+      }
+    },
     getChartHeight() {
       var height =
         (this.scales.length + 2) * this.options.item_height +

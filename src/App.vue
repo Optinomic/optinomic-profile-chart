@@ -1,9 +1,16 @@
 <template>
   <v-app id="app" style="margin:60px;">
     <v-content>
-      <div v-for="app in app_charts" :key="app.name" style="margin-bottom:60px;">
+      <div
+        v-for="app in app_charts"
+        :key="app.name"
+        style="margin-bottom:60px;"
+      >
         <v-divider></v-divider>
-        <h1 class="mt-12 mb-2 display-1 font-weight-thin" v-text="app.title"></h1>
+        <h1
+          class="mt-12 mb-2 display-1 font-weight-thin"
+          v-text="app.title"
+        ></h1>
         <OptinomicProfileChart
           :options="getChartOptions(app.name)"
           :ranges="getChartRanges(app.name)"
@@ -13,15 +20,6 @@
           :clinic_sample_dive="getChartCSDive(app.name)"
         ></OptinomicProfileChart>
       </div>
-      <v-container fluid>
-        <v-row align="center">
-          <v-col class="d-flex" cols="12" sm="6">
-            <v-select
-              label="Standard"
-            ></v-select>
-          </v-col>
-        </v-row>
-      </v-container>
     </v-content>
   </v-app>
 </template>
@@ -36,6 +34,7 @@ export default {
   name: "App",
   data: function() {
     return {
+      currentCS: null,
       app_charts: [
         {
           title: "BSCL",
@@ -118,6 +117,7 @@ export default {
       if (chart_current === "who_chart") {
         return_obj = cs_who;
       }
+      this.currentCS = return_obj;
       return return_obj;
     },
     getChartCSDive(chart_current) {
@@ -140,7 +140,6 @@ export default {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
   color: #2c3e50;
   margin: 60px;
 }
