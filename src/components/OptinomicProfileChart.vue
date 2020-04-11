@@ -4,12 +4,41 @@
       v-bind:style="{ width: '100%', height: getChartHeight + 'px' }"
       ref="chartdiv"
     ></div>
-    <v-container fluid v-if="clinic_samples">
+    <div class="cs_toggle" v-if="clinic_samples">
+      <v-tooltip right>
+        <template v-slot:activator="{ on }">
+          <div v-on="on">
+            <v-btn
+              icon
+              v-on:click="toggleCS"
+              v-if="!cs_toggle"
+              class="ma-2"
+              color="grey"
+            >
+              <v-icon>mdi-cog-outline</v-icon>
+            </v-btn>
+
+            <v-btn
+              icon
+              v-on:click="toggleCS"
+              v-if="cs_toggle"
+              class="ma-2"
+              color="pink"
+            >
+              <v-icon>mdi-cog-outline</v-icon>
+            </v-btn>
+          </div>
+        </template>
+        <span>Klinikstichprobe anpassen</span>
+      </v-tooltip>
+    </div>
+    <div class="cs_toggle" v-if="!clinic_samples"></div>
+    <v-container fluid v-if="cs_toggle">
       <v-row align="center" v-if="chart_data.dive">
         <v-col
           class="d-flex"
           cols="12"
-          sm="4"
+          :sm="12 / chart_data.dive.length"
           v-for="(dim, index) in clinic_samples.dimensions"
           :key="index"
         >
@@ -64,19 +93,26 @@ export default {
     return {
       chart: null,
       chart_data: {
+        data: null,
         dive: null
       },
-      container_top_height: 18
+      container_top_height: 18,
+      cs_toggle: false
     };
   },
   watch: {
-    chart_data: function () {
+    chart_data: function() {
       // console.log('DATA Changed', newData, oldData);
       this.chart.data = this.chart_data.data;
       this.chart.invalidateRawData();
     }
   },
   methods: {
+    toggleCS() {
+      if (this.clinic_samples !== null) {
+        this.cs_toggle = !this.cs_toggle;
+      }
+    },
     updateData() {
       // User did something
       this.chart_data = this.dataBuild();
@@ -589,7 +625,6 @@ export default {
       container_chart.height = am4core.percent(100);
       container_chart.toFront();
 
-
       // Create Chart & add Data
       let chart = container_chart.createChild(am4charts.XYChart);
       chart.dateFormatter.dateFormat = "dd.MM.yyyy";
@@ -613,6 +648,9 @@ export default {
       // Ranges
       drawRanges(this.ranges, this.options);
 
+      // Profiles
+      drawProfiles(this.chart_data, this.options);
+
       // Klinikstichprobe
       if (this.clinic_samples !== null) {
         drawCS(this.clinic_samples, this.options);
@@ -623,9 +661,6 @@ export default {
           this.chart_data
         );
       }
-
-      // Profiles
-      drawProfiles(this.chart_data, this.options);
 
       // add chart cursor
       chart.cursor = new am4charts.XYCursor();
@@ -666,4 +701,15 @@ export default {
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped></style>
+<style scoped>
+.cs_toggle {
+  background-color: white;
+  background: white;
+  z-index: 100;
+  position: relative;
+  height: 50px;
+  width: 60px;
+  max-width: 80px;
+  margin-top: -50px;
+}
+</style>
