@@ -135,18 +135,21 @@ export default {
           cs_sample_text: ""
         };
 
-        var getCategoryText = function(title, text) {
-          var r = "";
-          if (title !== "") {
-            r = r + title;
-          }
-          if (title !== "" && text !== "") {
-            r = r + ": ";
-          }
-          if (text !== "") {
-            r = r + text;
-          }
-          return "[font-size:11px]" + r + "[/]";
+        var getCategoryText = function (title, text) {
+            var r = "";
+            
+            if ((title !== "") && (title !== undefined)) {
+                r = r + title;
+            }
+            
+            if (((title !== "") && (title !== undefined)) && ((text !== "") && (text !== undefined))) {
+                r = r + ": ";
+            }
+            
+            if ((text !== "") && (text !== undefined)) {
+                r = r + text;
+            }
+            return "[font-size:11px]" + r + "[/]";
         };
 
         var flatten = function(obj, name, stem) {
